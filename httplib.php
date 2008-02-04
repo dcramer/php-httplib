@@ -1,15 +1,40 @@
 <?php
-class SocketError extends Exception
-{
-    // The base exception for HTTPConnection
-}
-class UnknownServerError extends SocketError
-{
-    // Thrown when there is an unknown server error trying to connect
-}
+/**
+ * A lightweight HTTP library which acts very similar to
+ * the Python httplib.
+ * @author David Cramer <dcramer@gmail.com>
+ * @version 1.0
+ * @package httplib
+ */
+
+/**
+ * The base exception for HTTPConnection
+ * @package httplib
+ */ 
+class SocketError extends Exception { }
+/**
+ * Thrown when there is an unknown server error trying to connect
+ * @package httplib
+ */
+class UnknownServerError extends SocketError { }
+
+/**
+ * The base HTTP class for opening connections.
+ * @package httplib
+ * @subpackage connection
+ */
 class HTTPConnection
 {
-    // This works *almost* like the Python class
+    /**
+     * Constructor defining the connection.
+     * <code>
+     * <?php
+     * $conn = new HTTPConnection('google.com');
+     * ?>
+     * </code>
+     * @param string $host hostname (e.g. domain.com)
+     * @param int $port port
+     */
     function __construct($host, $port=80, $timeout=60)
     {
         $this->host = $host;
@@ -17,18 +42,40 @@ class HTTPConnection
         $this->timeout = $timeout;
         $this->response = null;
     }
+    /**
+     * Opens the connection and sends the request headers.
+     * <code>
+     * <?php
+     * $conn->request('GET', '/', array('q'=>'http'));
+     * ?>
+     * </code>
+     * @param string $method request method (GET/POST/PUT)
+     * @param string $path request path
+     * @param mixed $params associative array of parameters to send
+     * @param mixed $headers associative array of headers to send
+     */
     function request($method, $path, $params, $headers=array())
     {
         $this->socket = @fsockopen($this->host, $this->port, $errorNumber, $errorString, (float)$this->timeout);
         if (!$this->socket)
         {
-            throw new UnknownServerError('Failed opening http socket connection: '.$errorString.' ('.$errorNumber.')');
+            throw new UnknownServerError('Failed opening http socket connection: '.socket_strerror($errorNumber).' ('.$errorNumber.')');
         }
+        stream_set_timeout($this->socket, (float)$this->timeout);
         $this->params = $params;
         $this->method = $method;
         $this->headers = $header;
         $this->path = $path;
     }
+    /**
+     * Reads the response from the server.
+     * <code>
+     * <?php
+     * $response = $conn->getresponse();
+     * ?>
+     * </code>
+     * @return HTTPResponse response object
+     */
     function getresponse()
     {
         if ($this->response) return $this->response;
@@ -66,12 +113,26 @@ class HTTPConnection
         return $this->response;
     }
 }
+/**
+ * A secure connection using SSL under the HTTP protocol.
+ * @package httplib
+ * @subpackage sslconnection
+ */
 class HTTPSConnection extends HTTPConnection
 {
-    
 }
+
+/**
+ * A response object generated from an HTTPConnection.
+ * @package httplib
+ * @subpackage response
+ */
 class HTTPResponse
 {
+    /**
+     * @param mixed $socket connection socket
+     * @param int $response response headers
+     */
     function __construct(&$socket, &$response)
     {
         $headers = explode("\r\n", $response);
@@ -93,6 +154,15 @@ class HTTPResponse
         }
         $this->socket = $socket;
     }
+    /**
+     * Reads the response body.
+     * <code>
+     * <?php
+     * $data = $response->read();
+     * ?>
+     * </code>
+     * @return string response body
+     */
     function read()
     {
         $response_content = '';
@@ -121,6 +191,7 @@ class HTTPResponse
             }
         }
         return chop($response_content);
+        fclose($this->socket);
     }
 }
 ?>
