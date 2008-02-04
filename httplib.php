@@ -2,6 +2,12 @@
 /**
  * A lightweight HTTP library which acts very similar to
  * the Python httplib.
+ * <code>
+ * $conn = new HTTPConnection('google.com');
+ * $conn->request('GET', '/', array('q'=>'http'));
+ * $response = $conn->getresponse();
+ * $data = $response->read();
+ * </code>
  * @author David Cramer <dcramer@gmail.com>
  * @version 1.0
  * @package httplib
