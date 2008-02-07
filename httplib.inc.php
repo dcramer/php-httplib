@@ -19,10 +19,15 @@
  */ 
 class SocketError extends Exception { }
 /**
- * Thrown when there is an unknown server error trying to connect
+ * Thrown when there is an unknown server error
  * @package httplib
  */
 class UnknownServerError extends SocketError { }
+/**
+ * Thrown when there is an error trying to connection
+ * @package httplib
+ */
+class ConnectionError extends SocketError { }
 
 /**
  * The base HTTP class for opening connections.
@@ -57,15 +62,15 @@ class HTTPConnection
      * </code>
      * @param string $method request method (GET/POST/PUT)
      * @param string $path request path
-     * @param mixed $params associative array of parameters to send
-     * @param mixed $headers associative array of headers to send
+     * @param array $params associative array of parameters to send
+     * @param array $headers associative array of headers to send
      */
     function request($method, $path, $params, $headers=array())
     {
         $this->socket = @fsockopen($this->host, $this->port, $errorNumber, $errorString, (float)$this->timeout);
         if (!$this->socket)
         {
-            throw new UnknownServerError('Failed opening http socket connection: '.socket_strerror($errorNumber).' ('.$errorNumber.')');
+            throw new ConnectionError('Failed connecting to '.$this->host.':'.$this->port.': '.socket_strerror($errorNumber).' ('.$errorNumber.'); '. $error);
         }
         stream_set_timeout($this->socket, (float)$this->timeout);
         $this->params = $params;
@@ -136,7 +141,7 @@ class HTTPSConnection extends HTTPConnection
 class HTTPResponse
 {
     /**
-     * @param mixed $socket connection socket
+     * @param socket $socket connection socket
      * @param int $response response headers
      */
     function __construct(&$socket, &$response)
