@@ -75,7 +75,7 @@ class HTTPConnection
         stream_set_timeout($this->socket, (float)$this->timeout);
         $this->params = $params;
         $this->method = $method;
-        $this->headers = $header;
+        $this->headers = $headers;
         $this->path = $path;
     }
     /**
